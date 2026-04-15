@@ -8,6 +8,13 @@ import { CharCode } from './charCode.js';
 import { Lazy } from './lazy.js';
 import { Constants } from './uint.js';
 
+/**
+ * Returns true if the given string is falsy (undefined, null, empty) or contains
+ * only whitespace characters.
+ *
+ * @param str The string to test.
+ * @returns `true` if `str` is falsy or blank, `false` otherwise.
+ */
 export function isFalsyOrWhitespace(str: string | undefined): boolean {
 	if (!str || typeof str !== 'string') {
 		return true;
@@ -103,6 +110,14 @@ export function count(value: string, substr: string): number {
 	return result;
 }
 
+/**
+ * Truncates a string to `maxLength` characters, appending `suffix` if the string was shortened.
+ *
+ * @param value The string to truncate.
+ * @param maxLength Maximum allowed length of the result (including the suffix).
+ * @param suffix The string to append when truncation occurs. Defaults to an ellipsis character.
+ * @returns The original string if it fits within `maxLength`, otherwise the truncated string with `suffix` appended.
+ */
 export function truncate(value: string, maxLength: number, suffix = Ellipsis): string {
 	if (value.length <= maxLength) {
 		return value;
@@ -111,6 +126,17 @@ export function truncate(value: string, maxLength: number, suffix = Ellipsis): s
 	return `${value.substr(0, maxLength)}${suffix}`;
 }
 
+/**
+ * Truncates the middle of a string so that it fits within `maxLength` characters,
+ * inserting `suffix` in place of the removed characters.
+ *
+ * For example, `truncateMiddle('hello world', 7)` might return `'hel…rld'`.
+ *
+ * @param value The string to truncate.
+ * @param maxLength Maximum allowed length of the result (including the suffix).
+ * @param suffix The string inserted in the middle when truncation occurs. Defaults to an ellipsis character.
+ * @returns The original string if it fits within `maxLength`, otherwise the string with its middle truncated.
+ */
 export function truncateMiddle(value: string, maxLength: number, suffix = Ellipsis): string {
 	if (value.length <= maxLength) {
 		return value;
@@ -187,6 +213,13 @@ export function rtrim(haystack: string, needle: string): string {
 	return haystack.substring(0, offset);
 }
 
+/**
+ * Converts a simple glob-style pattern (where `*` is the only wildcard) into an equivalent
+ * regular expression source string. All other special regex characters in the pattern are escaped.
+ *
+ * @param pattern A simple wildcard pattern where `*` matches any sequence of characters.
+ * @returns A regex pattern string that can be passed to `new RegExp(...)`.
+ */
 export function convertSimple2RegExpPattern(pattern: string): string {
 	return pattern.replace(/[\-\\\{\}\+\?\|\^\$\.\,\[\]\(\)\#\s]/g, '\\$&').replace(/[\*]/g, '.*');
 }
@@ -244,14 +277,39 @@ export function regExpLeadsToEndlessLoop(regexp: RegExp): boolean {
 	return !!(match && regexp.lastIndex === 0);
 }
 
+/**
+ * Joins an array of strings with a separator, filtering out any falsy values
+ * (`undefined`, `null`, or `false`) before joining.
+ *
+ * @param items Array of string values (or falsy sentinels) to join.
+ * @param separator String placed between each pair of adjacent items.
+ * @returns The joined string, with all falsy items excluded.
+ */
 export function joinStrings(items: (string | undefined | null | false)[], separator: string): string {
 	return items.filter(item => item !== undefined && item !== null && item !== false).join(separator);
 }
 
+/**
+ * Splits `str` into lines, recognising all three line-ending conventions:
+ * CRLF (`\r\n`), CR (`\r`), and LF (`\n`). The line-ending characters are
+ * **not** included in the returned strings.
+ *
+ * @param str The string to split.
+ * @returns An array of lines. A string with no newlines returns a single-element array.
+ */
 export function splitLines(str: string): string[] {
 	return str.split(/\r\n|\r|\n/);
 }
 
+/**
+ * Splits `str` into lines, preserving each line's trailing line-ending characters
+ * (CRLF, CR, or LF) as part of the returned line string.
+ *
+ * For example, `"a\r\nb"` returns `["a\r\n", "b"]`.
+ *
+ * @param str The string to split.
+ * @returns An array of lines where each line includes its line-ending characters (if any).
+ */
 export function splitLinesIncludeSeparators(str: string): string[] {
 	const linesWithSeparators: string[] = [];
 	const splitLinesAndSeparators = str.split(/(\r\n|\r|\n)/);
@@ -261,6 +319,15 @@ export function splitLinesIncludeSeparators(str: string): string[] {
 	return linesWithSeparators;
 }
 
+/**
+ * Returns the index of the first match of the regular expression `re` in `str`,
+ * or `-1` if there is no match. Unlike `String.prototype.search`, this works
+ * correctly with stateful (sticky/global) regexes by using `exec` directly.
+ *
+ * @param str The string to search.
+ * @param re The regular expression to search with.
+ * @returns The zero-based index of the first match, or `-1` if not found.
+ */
 export function indexOfPattern(str: string, re: RegExp) {
 	const match = re.exec(str);
 	if (match) {
