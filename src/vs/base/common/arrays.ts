@@ -25,6 +25,16 @@ export function tail<T>(arr: T[]): [T[], T] {
 	return [arr.slice(0, arr.length - 1), arr[arr.length - 1]];
 }
 
+/**
+ * Returns `true` if both arrays have the same length and every corresponding pair of elements
+ * satisfies `itemEquals`. Returns `false` for mismatched lengths or if either array is `undefined`
+ * while the other is not (two `undefined` values are considered equal).
+ *
+ * @param one The first array, or `undefined`.
+ * @param other The second array, or `undefined`.
+ * @param itemEquals A function used to compare individual elements. Defaults to strict equality (`===`).
+ * @returns `true` if the arrays are element-wise equal, `false` otherwise.
+ */
 export function equals<T>(one: ReadonlyArray<T> | undefined, other: ReadonlyArray<T> | undefined, itemEquals: (a: T, b: T) => boolean = (a, b) => a === b): boolean {
 	if (one === other) {
 		return true;
@@ -152,6 +162,14 @@ export function quickSelect<T>(nth: number, data: T[], compare: Compare<T>): T {
 	}
 }
 
+/**
+ * Sorts a copy of `data` using `compare` and then groups consecutive equal elements together.
+ * Two elements are considered equal when `compare` returns `0`.
+ *
+ * @param data The input array. The original array is not mutated.
+ * @param compare A comparator function that defines the sort order and equality.
+ * @returns An array of groups, where each group is a non-empty array of equal adjacent elements.
+ */
 export function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
 	const result: T[][] = [];
 	let currentGroup: T[] | undefined = undefined;
@@ -190,18 +208,44 @@ export function* groupAdjacentBy<T>(items: Iterable<T>, shouldBeGrouped: (item1:
 	}
 }
 
+/**
+ * Iterates over all adjacent pairs of elements in `arr`, including synthetic boundary pairs
+ * where `undefined` is used as the element before the first entry and after the last entry.
+ *
+ * For an array `[a, b, c]` the callback is called with `(undefined, a)`, `(a, b)`, `(b, c)`,
+ * and `(c, undefined)` — a total of `arr.length + 1` invocations.
+ *
+ * @param arr The array to iterate.
+ * @param f Callback invoked for each adjacent pair. Either argument may be `undefined` at the boundaries.
+ */
 export function forEachAdjacent<T>(arr: T[], f: (item1: T | undefined, item2: T | undefined) => void): void {
 	for (let i = 0; i <= arr.length; i++) {
 		f(i === 0 ? undefined : arr[i - 1], i === arr.length ? undefined : arr[i]);
 	}
 }
 
+/**
+ * Iterates over every element of `arr`, providing each element together with its immediate
+ * predecessor and successor. The first element receives `undefined` as `before`, and the
+ * last element receives `undefined` as `after`.
+ *
+ * @param arr The array to iterate.
+ * @param f Callback invoked for each element with its neighbors. `before` and `after` are
+ *   `undefined` at the start and end of the array respectively.
+ */
 export function forEachWithNeighbors<T>(arr: T[], f: (before: T | undefined, element: T, after: T | undefined) => void): void {
 	for (let i = 0; i < arr.length; i++) {
 		f(i === 0 ? undefined : arr[i - 1], arr[i], i + 1 === arr.length ? undefined : arr[i + 1]);
 	}
 }
 
+/**
+ * Concatenates multiple arrays into a single flat array.
+ * Equivalent to `Array.prototype.concat`, but typed to accept a spread of arrays.
+ *
+ * @param arrays The arrays to concatenate.
+ * @returns A new array containing all elements from each of the provided arrays, in order.
+ */
 export function concatArrays<T extends any[]>(...arrays: T): T[number][number][] {
 	return [].concat(...arrays);
 }
@@ -411,6 +455,13 @@ export function distinct<T>(array: ReadonlyArray<T>, keyFn: (value: T) => unknow
 	});
 }
 
+/**
+ * Creates a stateful filter function that returns `true` the first time it sees each unique key
+ * and `false` for any subsequent element with the same key. Useful as a callback to `Array.filter`.
+ *
+ * @param keyFn A function that derives a comparable key from an element.
+ * @returns A predicate function suitable for `Array.filter` that passes only the first occurrence of each key.
+ */
 export function uniqueFilter<T, R>(keyFn: (t: T) => R): (t: T) => boolean {
 	const seen = new Set<R>();
 
@@ -426,6 +477,15 @@ export function uniqueFilter<T, R>(keyFn: (t: T) => R): (t: T) => boolean {
 	};
 }
 
+/**
+ * Returns the length of the longest common prefix shared by two arrays.
+ * Elements are compared using `equals`, which defaults to strict equality (`===`).
+ *
+ * @param one The first array.
+ * @param other The second array.
+ * @param equals A function used to compare individual elements. Defaults to strict equality.
+ * @returns The number of leading elements that are equal in both arrays.
+ */
 export function commonPrefixLength<T>(one: ReadonlyArray<T>, other: ReadonlyArray<T>, equals: (a: T, b: T) => boolean = (a, b) => a === b): number {
 	let result = 0;
 
@@ -436,6 +496,17 @@ export function commonPrefixLength<T>(one: ReadonlyArray<T>, other: ReadonlyArra
 	return result;
 }
 
+/**
+ * Generates an array of consecutive integers.
+ *
+ * - `range(to)` — returns integers from `0` (inclusive) to `to` (exclusive).
+ * - `range(from, to)` — returns integers from `from` (inclusive) to `to` (exclusive).
+ *   If `from > to` the array is generated in descending order.
+ *
+ * @param from Start of the range (inclusive). Omit to start from `0`.
+ * @param to End of the range (exclusive).
+ * @returns An array of integers covering the specified range.
+ */
 export function range(to: number): number[];
 export function range(from: number, to: number): number[];
 export function range(arg: number, to?: number): number[] {
@@ -463,6 +534,18 @@ export function range(arg: number, to?: number): number[] {
 	return result;
 }
 
+/**
+ * Converts an array into a dictionary object keyed by the result of `indexer`.
+ * An optional `mapper` can transform the stored value; if omitted, the original
+ * element is stored as-is.
+ *
+ * If two elements produce the same key, the last one wins.
+ *
+ * @param array The source array.
+ * @param indexer A function that derives a string key from each element.
+ * @param mapper An optional function that transforms each element into the value stored in the result object.
+ * @returns A plain object whose keys are produced by `indexer` and whose values are produced by `mapper` (or the original elements).
+ */
 export function index<T>(array: ReadonlyArray<T>, indexer: (t: T) => string): { [key: string]: T };
 export function index<T, R>(array: ReadonlyArray<T>, indexer: (t: T) => string, mapper: (t: T) => R): { [key: string]: R };
 export function index<T, R>(array: ReadonlyArray<T>, indexer: (t: T) => string, mapper?: (t: T) => R): { [key: string]: R } {
@@ -560,18 +643,42 @@ export function pushToEnd<T>(arr: T[], value: T): void {
 	}
 }
 
+/**
+ * Pushes all elements from `items` onto `arr` in order, mutating `arr` in place.
+ * Avoids the spread-operator pitfall when `items` is very large (no call-stack overflow).
+ *
+ * @param arr The target array to append to.
+ * @param items The elements to append.
+ */
 export function pushMany<T>(arr: T[], items: ReadonlyArray<T>): void {
 	for (const item of items) {
 		arr.push(item);
 	}
 }
 
+/**
+ * Applies `fn` to each element if `items` is an array, or to `items` directly if it is a
+ * single value. The return type mirrors the input: an array in yields an array out, a scalar
+ * in yields a scalar out.
+ *
+ * @param items A single value or an array of values.
+ * @param fn The mapping function to apply to each element.
+ * @returns The mapped scalar or mapped array, depending on the type of `items`.
+ */
 export function mapArrayOrNot<T, U>(items: T | T[], fn: (_: T) => U): U | U[] {
 	return Array.isArray(items) ?
 		items.map(fn) :
 		fn(items);
 }
 
+/**
+ * Maps each element of `array` through `fn` and returns a new array containing only the
+ * results for which `fn` returned a non-`undefined` value (a combined map + filter operation).
+ *
+ * @param array The input array.
+ * @param fn A function that returns a mapped value or `undefined` to exclude the element.
+ * @returns A new array of the non-`undefined` mapped values, preserving order.
+ */
 export function mapFilter<T, U>(array: ReadonlyArray<T>, fn: (t: T) => U | undefined): U[] {
 	const result: U[] = [];
 	for (const item of array) {
@@ -583,17 +690,38 @@ export function mapFilter<T, U>(array: ReadonlyArray<T>, fn: (t: T) => U | undef
 	return result;
 }
 
+/**
+ * Returns a new array containing the elements of `array` with duplicates removed.
+ * Equality is determined by strict reference equality (the `Set` constructor semantics).
+ * The order of first occurrences is preserved.
+ *
+ * @param array The input array.
+ * @returns A new array with duplicate elements removed.
+ */
 export function withoutDuplicates<T>(array: ReadonlyArray<T>): T[] {
 	const s = new Set(array);
 	return Array.from(s);
 }
 
+/**
+ * Wraps `x` in a single-element array if it is not already an array.
+ * If `x` is already an array it is returned as-is.
+ *
+ * @param x A value or an array of values.
+ * @returns `x` unchanged if it is already an array, otherwise `[x]`.
+ */
 export function asArray<T>(x: T | T[]): T[];
 export function asArray<T>(x: T | readonly T[]): readonly T[];
 export function asArray<T>(x: T | T[]): T[] {
 	return Array.isArray(x) ? x : [x];
 }
 
+/**
+ * Returns a uniformly random element from `arr`, or `undefined` if the array is empty.
+ *
+ * @param arr The array to pick from.
+ * @returns A randomly selected element, or `undefined` for an empty array.
+ */
 export function getRandomElement<T>(arr: T[]): T | undefined {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -688,10 +816,31 @@ export namespace CompareResult {
 */
 export type Comparator<T> = (a: T, b: T) => CompareResult;
 
+/**
+ * Creates a `Comparator<TItem>` that compares items by first projecting each one to a
+ * `TCompareBy` value via `selector` and then delegating to `comparator`.
+ *
+ * Useful for sorting objects by a specific property:
+ * ```ts
+ * people.sort(compareBy(p => p.age, numberComparator));
+ * ```
+ *
+ * @param selector A function that extracts the comparison key from an item.
+ * @param comparator A comparator for the extracted key type.
+ * @returns A new comparator that operates on `TItem` values.
+ */
 export function compareBy<TItem, TCompareBy>(selector: (item: TItem) => TCompareBy, comparator: Comparator<TCompareBy>): Comparator<TItem> {
 	return (a, b) => comparator(selector(a), selector(b));
 }
 
+/**
+ * Combines multiple comparators into a single comparator that tries each one in order and
+ * returns the result of the first comparator that does not consider the two items equal.
+ * If all comparators consider the items equal, returns `0`.
+ *
+ * @param comparators Comparators to apply in priority order.
+ * @returns A composite comparator that resolves ties using later comparators.
+ */
 export function tieBreakComparators<TItem>(...comparators: Comparator<TItem>[]): Comparator<TItem> {
 	return (item1, item2) => {
 		for (const comparator of comparators) {
